@@ -1,0 +1,63 @@
+name: Update PKGBUILD
+'on':
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '30 6 * * *'
+
+jobs:
+  do_the_thing:
+    name: Do the thing
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install required packages
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install curl jq tree
+
+      - name: Download list of Releases
+        env:
+          # GH_TOKEN: ${{ secrets.GH_TOKEN_FOR_AUR_JACKETT_UPDATER }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +x
+          curl \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/Jackett/Jackett/releases -o releases.json
+          set -x
+
+      - name: Setup variables
+        run: |
+          echo "release_latest=$(jq -r '.[0]["tag_name"]|ltrimstr("v")' < releases.json)" >> $GITHUB_ENV
+          echo "release_links=$(jq '.[0]["assets"][range(0;3)]["browser_download_url"]' < releases.json)" >> $GITHUB_ENV
+          echo "pb_pkgver=$(sed -nr "s/^pkgver=(\S+)/\1/p" PKGBUILD)" >> $GITHUB_ENV
+          echo "pb_pkgrel=$(sed -nr "s/^pkgrel=(\S+)/\1/p" PKGBUILD)" >> $GITHUB_ENV
+
+      - name: New version?
+        run: |
+          if [[ $release_latest == $pb_pkgver ]];
+          then
+            echo "new_version=true" >> $GITHUB_ENV
+          else
+            echo "new_version=false" >> $GITHUB_ENV
+          fi
+
+      - name: Download release artifacts
+        if: env.new_version == true
+        run: |
+          for link in ${release_links};
+          do
+            curl -O ${link}
+          done
+
+      - name: Show files
+        run: |
+          tree -a
+
