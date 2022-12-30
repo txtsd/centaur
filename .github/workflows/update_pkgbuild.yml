@@ -10,54 +10,106 @@ jobs:
   do_the_thing:
     name: Do the thing
     runs-on: ubuntu-22.04
+    container: archlinux:latest
     steps:
 
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Install required packages
+      - name: Install prereqs
         run: |
-          sudo apt-get -y update
-          sudo apt-get -y install curl jq tree
+          pacman -Syu --noconfirm jq tree git pacman-contrib openssh gnupg
+
+      - name: Configure ssh known_hosts
+        run: |
+          mkdir -p /root/.ssh/
+          ssh-keyscan -t ed25519 aur.archlinux.org >> /root/.ssh/known_hosts
+          ssh-keyscan -t rsa aur.archlinux.org >> /root/.ssh/known_hosts
+          ssh-keyscan -t ecdsa-sha2-nistp256 aur.archlinux.org >> /root/.ssh/known_hosts
+
+      - name: Configure ssh-agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.YEKVIRP }}
+          log-public-key: false
+
+      - name: Configure gpg and git
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.YEKGPG }}
+          passphrase: ${{ secrets.ESARHPSSAPGPG }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_committer_name: txtsd
+          # Throws an error because it is not the topmost UID in the key
+          # git_committer_email: code@ihavea.quest
+
+      - name: Trust GPG key
+        run: |
+          gpg --no-tty --command-fd 0 --edit-key 0x97C8848C2E4063CB << EOTRUST
+          trust
+          5
+          y
+          quit
+          EOTRUST
+
+      - name: Configure git -- user.email
+        run: |
+          git config --global user.email "code@ihavea.quest"
+          # git config --global user.name = "txtsd"
+          # git config --global user.signingkey = "97C8848C2E4063CB"
+          # git config --global commit.gpgsign true
+          # git config --global protocol.version 2
+          # git config --global http.version = "HTTP/2"
+
+      - name: Checkout repo
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git clone ssh://aur@aur.archlinux.org/jackett-bin.git .
+          # This is only for testing
+          # git reset --hard HEAD~1
 
       - name: Download list of Releases
         env:
-          # GH_TOKEN: ${{ secrets.GH_TOKEN_FOR_AUR_JACKETT_UPDATER }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set +x
           curl \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: Bearer ${GITHUB_TOKEN}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           https://api.github.com/repos/Jackett/Jackett/releases -o releases.json
-          set -x
 
       - name: Setup variables
         run: |
-          echo "release_latest=$(jq -r '.[0]["tag_name"]|ltrimstr("v")' < releases.json)" >> $GITHUB_ENV
-          echo "release_links=$(jq '.[0]["assets"][range(0;3)]["browser_download_url"]' < releases.json)" >> $GITHUB_ENV
-          echo "pb_pkgver=$(sed -nr "s/^pkgver=(\S+)/\1/p" PKGBUILD)" >> $GITHUB_ENV
-          echo "pb_pkgrel=$(sed -nr "s/^pkgrel=(\S+)/\1/p" PKGBUILD)" >> $GITHUB_ENV
+          echo release_latest=$(jq -r '.[0]["tag_name"]|ltrimstr("v")' < releases.json) >> $GITHUB_ENV
+          echo pb_pkgver=$(sed -nr "s/^pkgver=(\S+)/\1/p" PKGBUILD) >> $GITHUB_ENV
+          echo pb_pkgrel=$(sed -nr "s/^pkgrel=(\S+)/\1/p" PKGBUILD) >> $GITHUB_ENV
 
-      - name: New version?
+      - name: Compare versions
         run: |
           if [[ $release_latest == $pb_pkgver ]];
           then
-            echo "new_version=true" >> $GITHUB_ENV
+            echo "new_version=no" >> $GITHUB_ENV
           else
-            echo "new_version=false" >> $GITHUB_ENV
+            echo "new_version=yes" >> $GITHUB_ENV
           fi
 
-      - name: Download release artifacts
-        if: env.new_version == true
+      - name: Update PKGBUILD
+        if: env.new_version == 'yes'
         run: |
-          for link in ${release_links};
-          do
-            curl -O ${link}
-          done
+          sed -ri "s/^pkgver=(\S+)/pkgver=${{ env.release_latest }}/" PKGBUILD
+          sed -ri "s/^pkgrel=(\S+)/pkgrel=1/" PKGBUILD
+          chmod -R 777 .
+          runuser -u nobody -- updpkgsums
+          runuser -u nobody -- makepkg --printsrcinfo > .SRCINFO
+          chmod 755 .
+          find . -type f -exec chmod 644 {} +
+          # git diff
+          git add .SRCINFO PKGBUILD
+          git commit -s -S -m "upgpkg: jackett-bin ${{ env.release_latest }}-1"
+          # git log -2 --show-signature
+          # git verify-commit HEAD
 
-      - name: Show files
+      - name: Upload PKGBUILD
+        if: env.new_version == 'yes'
         run: |
-          tree -a
+          git push -u origin master
 
