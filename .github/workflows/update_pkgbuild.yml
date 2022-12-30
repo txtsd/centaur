@@ -7,15 +7,15 @@ name: Update PKGBUILD
     - cron: '30 6 * * *'
 
 jobs:
-  do_the_thing:
-    name: Do the thing
+  update_and_upload_pkgbuild:
+    name: Update & Upload PKGBUILD
     runs-on: ubuntu-22.04
     container: archlinux:latest
     steps:
 
-      - name: Install prereqs
+      - name: Install dependencies in Arch container
         run: |
-          pacman -Syu --noconfirm jq tree git pacman-contrib openssh gnupg
+          pacman -Syu --noconfirm jq tree git pacman-contrib openssh
 
       - name: Configure ssh known_hosts
         run: |
@@ -42,7 +42,7 @@ jobs:
           # Throws an error because it is not the topmost UID in the key
           # git_committer_email: code@ihavea.quest
 
-      - name: Trust GPG key
+      - name: Trust own GPG key
         run: |
           gpg --no-tty --command-fd 0 --edit-key 0x97C8848C2E4063CB << EOTRUST
           trust
@@ -54,13 +54,10 @@ jobs:
       - name: Configure git -- user.email
         run: |
           git config --global user.email "code@ihavea.quest"
-          # git config --global user.name = "txtsd"
-          # git config --global user.signingkey = "97C8848C2E4063CB"
-          # git config --global commit.gpgsign true
-          # git config --global protocol.version 2
-          # git config --global http.version = "HTTP/2"
+          git config --global protocol.version 2
+          git config --global http.version "HTTP/2"
 
-      - name: Checkout repo
+      - name: Checkout AUR repo
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git clone ssh://aur@aur.archlinux.org/jackett-bin.git .
@@ -77,11 +74,10 @@ jobs:
           -H "X-GitHub-Api-Version: 2022-11-28" \
           https://api.github.com/repos/Jackett/Jackett/releases -o releases.json
 
-      - name: Setup variables
+      - name: Grab versions
         run: |
           echo release_latest=$(jq -r '.[0]["tag_name"]|ltrimstr("v")' < releases.json) >> $GITHUB_ENV
           echo pb_pkgver=$(sed -nr "s/^pkgver=(\S+)/\1/p" PKGBUILD) >> $GITHUB_ENV
-          echo pb_pkgrel=$(sed -nr "s/^pkgrel=(\S+)/\1/p" PKGBUILD) >> $GITHUB_ENV
 
       - name: Compare versions
         run: |
@@ -102,11 +98,8 @@ jobs:
           runuser -u nobody -- makepkg --printsrcinfo > .SRCINFO
           chmod 755 .
           find . -type f -exec chmod 644 {} +
-          # git diff
           git add .SRCINFO PKGBUILD
           git commit -s -S -m "upgpkg: jackett-bin ${{ env.release_latest }}-1"
-          # git log -2 --show-signature
-          # git verify-commit HEAD
 
       - name: Upload PKGBUILD
         if: env.new_version == 'yes'
