@@ -15,7 +15,7 @@ jobs:
 
       - name: Install dependencies in Arch container
         run: |
-          pacman -Syu --noconfirm jq tree git pacman-contrib openssh
+          pacman -Syu --noconfirm jq tree git pacman-contrib openssh sudo
 
       - name: Configure ssh known_hosts
         run: |
