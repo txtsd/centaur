@@ -109,8 +109,27 @@ jobs:
           git add .SRCINFO PKGBUILD
           git commit -s -S -m "upgpkg: jackett-bin ${{ env.release_latest }}-1"
 
-      - name: Upload PKGBUILD
+      - name: Test -- Build and install package
         if: env.new_version == 'yes'
+        run: |
+          runuser -u dev -- makepkg -si --noconfirm
+
+      - name: Test -- Run package
+        if: env.new_version == 'yes'
+        run: |
+          systemctl start jackett.service
+          condition_1=$?
+          journalctl --no-pager -u jackett.service | grep "Application started"
+          condition_2=$?
+          if [ $condition_1 == 0 ] && [ $condition_2 == 0 ];
+          then
+            echo "test_run=yes" >> $GITHUB_ENV
+          else
+            echo "test_run=no" >> $GITHUB_ENV
+          fi
+
+      - name: Upload PKGBUILD
+        if: env.test_run == 'yes'
         run: |
           git push -u origin master
 
