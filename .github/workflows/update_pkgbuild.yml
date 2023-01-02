@@ -88,16 +88,24 @@ jobs:
             echo "new_version=yes" >> $GITHUB_ENV
           fi
 
+      - name: Create user to run makepkg
+        if: env.new_version == 'yes'
+        run: |
+          useradd -m dev
+          echo "dev ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/01_dev
+
+      - name: chown for dev
+        if: env.new_version == 'yes'
+        run: |
+          chown -R dev: .
+
       - name: Update PKGBUILD
         if: env.new_version == 'yes'
         run: |
           sed -ri "s/^pkgver=(\S+)/pkgver=${{ env.release_latest }}/" PKGBUILD
           sed -ri "s/^pkgrel=(\S+)/pkgrel=1/" PKGBUILD
-          chmod -R 777 .
-          runuser -u nobody -- updpkgsums
-          runuser -u nobody -- makepkg --printsrcinfo > .SRCINFO
-          chmod 755 .
-          find . -type f -exec chmod 644 {} +
+          runuser -u dev -- updpkgsums
+          runuser -u dev -- makepkg --printsrcinfo > .SRCINFO
           git add .SRCINFO PKGBUILD
           git commit -s -S -m "upgpkg: jackett-bin ${{ env.release_latest }}-1"
 
