@@ -117,11 +117,9 @@ jobs:
       - name: Test -- Run package
         if: env.new_version == 'yes'
         run: |
-          systemctl start jackett.service
-          condition_1=$?
-          journalctl --no-pager -u jackett.service | grep "Application started"
-          condition_2=$?
-          if [ $condition_1 == 0 ] && [ $condition_2 == 0 ];
+          grep -m1 "Application started" <(runuser -u jackett -- /usr/lib/jackett/jackett --NoRestart --NoUpdates --DataFolder /var/lib/jackett) ; killall jackett
+          exit_code=$?
+          if [ $exit_code == 0 ];
           then
             echo "test_run=yes" >> $GITHUB_ENV
           else
