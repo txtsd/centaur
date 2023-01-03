@@ -11,6 +11,7 @@ jobs:
     name: Update & Upload PKGBUILD
     runs-on: ubuntu-22.04
     container: archlinux:latest
+    timeout-minutes: 5
     steps:
 
       - name: Install dependencies in Arch container
