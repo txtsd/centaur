@@ -126,9 +126,21 @@ jobs:
           runuser -u dev -- makepkg -si --noconfirm
 
       - name: Test -- Run package
-        if: env.new_version == 'yes'
+        if: env.new_version == 'yes' && matrix.pkgname != 'jackett-mono'
         run: |
           grep -m1 "Application started" <(runuser -u jackett -- /usr/lib/jackett/jackett --NoRestart --NoUpdates --DataFolder /var/lib/jackett) ; killall jackett
+          exit_code=$?
+          if [ $exit_code == 0 ];
+          then
+            echo "test_run=yes" >> $GITHUB_ENV
+          else
+            echo "test_run=no" >> $GITHUB_ENV
+          fi
+
+      - name: Test -- Run package (Mono)
+        if: env.new_version == 'yes' && matrix.pkgname == 'jackett-mono'
+        run: |
+          grep -m1 "Application started" <(runuser -u jackett -- /usr/bin/mono --debug /usr/lib/jackett/JackettConsole.exe --NoRestart --NoUpdates --DataFolder /var/lib/jackett) ; killall jackett
           exit_code=$?
           if [ $exit_code == 0 ];
           then
