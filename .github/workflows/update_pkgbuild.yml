@@ -12,6 +12,15 @@ jobs:
     runs-on: ubuntu-22.04
     container: archlinux:latest
     timeout-minutes: 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - pkgname: jackett
+        - pkgname: jackett-bin
+        - pkgname: jackett-mono
+
     steps:
 
       - name: Install dependencies in Arch container
@@ -61,7 +70,7 @@ jobs:
       - name: Checkout AUR repo
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git clone ssh://aur@aur.archlinux.org/jackett-bin.git .
+          git clone ssh://aur@aur.archlinux.org/${{ matrix.pkgname }}.git .
           # This is only for testing
           # git reset --hard HEAD~1
 
@@ -108,7 +117,7 @@ jobs:
           runuser -u dev -- updpkgsums
           runuser -u dev -- makepkg --printsrcinfo > .SRCINFO
           git add .SRCINFO PKGBUILD
-          git commit -s -S -m "upgpkg: jackett-bin ${{ env.release_latest }}-1"
+          git commit -s -S -m "upgpkg: ${{ matrix.pkgname }} ${{ env.release_latest }}-1"
 
       - name: Test -- Build and install package
         if: env.new_version == 'yes'
@@ -131,4 +140,3 @@ jobs:
         if: env.test_run == 'yes'
         run: |
           git push -u origin master
-
