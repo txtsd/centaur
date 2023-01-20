@@ -140,7 +140,7 @@ jobs:
       - name: Test -- Run package (Mono)
         if: env.new_version == 'yes' && matrix.pkgname == 'jackett-mono'
         run: |
-          grep -m1 "Application started" <(runuser -u jackett -- /usr/bin/mono --debug /usr/lib/jackett/JackettConsole.exe --NoRestart --NoUpdates --DataFolder /var/lib/jackett) ; killall jackett
+          grep -m1 "Application started" <(runuser -u jackett -- /usr/bin/mono --debug /usr/lib/jackett/JackettConsole.exe --NoRestart --NoUpdates --DataFolder /var/lib/jackett) ; killall mono
           exit_code=$?
           if [ $exit_code == 0 ];
           then
