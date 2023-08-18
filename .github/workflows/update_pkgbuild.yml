@@ -116,7 +116,7 @@ jobs:
         if: env.new_version == 'yes'
         run: |
           # GitHub Actions gets stuck after shutting down the dotnet build-server so we avoid doing it on the CI
-          sed -ri "s/^dotnet build-server shutdown$/##/" PKGBUILD
+          sed -ri "s/dotnet build-server shutdown/##/" PKGBUILD
           runuser -u dev -- makepkg -si --noconfirm
 
       - name: Test -- Run package
