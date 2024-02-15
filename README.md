@@ -13,19 +13,18 @@ From Latin centaurus, from Ancient Greek κένταυρος (kéntauros), from �
 
 **centaur** (plural centaurs)
 
-    1. (Greek mythology) A mythical beast having a horse's body with a man's
-    head and torso in place of the head and neck of the horse. 
+1. (Greek mythology) A mythical beast having a horse's body with a man's head
+and torso in place of the head and neck of the horse.
 
-        Synonym: hippocentaur
+    Synonym: hippocentaur
 
-    2. (astronomy, also capitalised) An icy planetoid that orbits the Sun
-    between Jupiter and Neptune.
-    3. (chess) A chess-playing team comprising a human player and a computer
-    who work together.
-    4. (by extension, artificial intelligence) A human and an AI who work
-    together.
-    5. Certainly, definitely, absolutely, not just for the AUR in the word, and
-    also not just because I imagined a centaur wearing a jacket.
+2. (astronomy, also capitalised) An icy planetoid that orbits the Sun between
+Jupiter and Neptune.
+3. (chess) A chess-playing team comprising a human player and a computer who
+work together.
+4. (by extension, artificial intelligence) A human and an AI who work together.
+5. Certainly, definitely, absolutely, not just for the AUR in the word, and
+also not just because I imagined a centaur wearing a jacket.
 
 ## License
 
