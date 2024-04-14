@@ -20,13 +20,13 @@ jobs:
         - pkgname: jackett
         - pkgname: jackett-bin
         - pkgname: jackett-mono
-          deps: 'mono openssl'
+          deps: 'mono'
 
     steps:
 
       - name: Install dependencies in Arch container
         run: |
-          pacman -Syu --noconfirm jq tree git pacman-contrib openssh sudo debugedit ${{ matrix.deps }}
+          pacman -Syu --noconfirm jq tree git pacman-contrib openssh ${{ matrix.deps }}
 
       - name: Configure ssh known_hosts
         run: |
