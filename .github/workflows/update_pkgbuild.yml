@@ -10,7 +10,7 @@ jobs:
   update_and_upload_pkgbuild:
     name: Update & Upload PKGBUILD
     runs-on: ubuntu-22.04
-    container: archlinux:latest
+    container: registry.archlinux.org/archlinux/archlinux-docker:base-devel-master
     timeout-minutes: 5
 
     strategy:
