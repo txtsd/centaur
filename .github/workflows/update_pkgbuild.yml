@@ -109,7 +109,6 @@ jobs:
           sed -ri "s/^pkgrel=(\S+)/pkgrel=1/" PKGBUILD
           runuser -u dev -- updpkgsums
           runuser -u dev -- makepkg --printsrcinfo > .SRCINFO
-          git checkout -b master
           git add .SRCINFO PKGBUILD
           git commit -s -S -m "upgpkg: ${{ matrix.pkgname }} ${{ env.release_latest }}-1"
 
