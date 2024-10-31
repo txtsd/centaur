@@ -9,7 +9,7 @@ name: Update PKGBUILD
 jobs:
   update_and_upload_pkgbuild:
     name: Update & Upload PKGBUILD
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     container: ghcr.io/archlinux/archlinux:base-devel
     timeout-minutes: 5
 
