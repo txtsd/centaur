@@ -2,6 +2,9 @@
 
 A PKGBUILD updater for `jackett{,-bin,-mono}` on the [Arch User Repository](https://aur.archlinux.org)
 
+The media stack section of my AUR packages can be found at [auricularr](https://github.com/txtsd/auricularr)\
+The rest of my AUR packages can be found at [ankylosaurus](https://github.com/txtsd/ankylosaurus/)
+
 ## Meaning
 
 ### Etymology
@@ -14,17 +17,17 @@ From Latin centaurus, from Ancient Greek κένταυρος (kéntauros), from �
 **centaur** (plural centaurs)
 
 1. (Greek mythology) A mythical beast having a horse's body with a man's head
-and torso in place of the head and neck of the horse.
+    and torso in place of the head and neck of the horse.
 
-    Synonym: hippocentaur
+        Synonym: hippocentaur
 
 2. (astronomy, also capitalised) An icy planetoid that orbits the Sun between
-Jupiter and Neptune.
+    Jupiter and Neptune.
 3. (chess) A chess-playing team comprising a human player and a computer who
-work together.
+    work together.
 4. (by extension, artificial intelligence) A human and an AI who work together.
 5. Certainly, definitely, absolutely, not just for the AUR in the word, and
-also not just because I imagined a centaur wearing a jacket.
+    also not just because I imagined a centaur wearing a jacket.
 
 ## License
 
